@@ -6,7 +6,7 @@ authors = [
 ]
 description = "A Flask-based PDF rendering service using WeasyPrint"
 readme = "README.md"
-requires-python = ">=3.12"
+requires-python = ">=3.14"
 license = { text = "MIT" }
 
 dependencies = [
@@ -23,12 +23,14 @@ dependencies = [
     "python-dotenv>=1.2.1",
 ]
 
-[project.optional-dependencies]
+[dependency-groups]
 dev = [
     "pytest>=8.3.0",
     "pytest-cov>=6.0.0",
     "ruff>=0.9.0",
     "ty>=0.0.1a0",
+    "pre-commit>=4.5.1",
+    "taskipy>=1.14.1",
 ]
 
 [tool.ruff]
@@ -65,7 +67,7 @@ pythonpath = ["."]
 addopts = "-v --tb=short --strict-markers"
 
 [tool.ty.environment]
-python-version = "3.12"
+python-version = "3.14"
 
 [tool.taskipy.tasks]
 dev = "python -m app"
@@ -77,9 +79,4 @@ type = "ty check"
 test = "pytest"
 cov = "pytest --cov=app --cov-report=html --cov-report=term-missing --cov-report=xml"
 check = "task lint_fix && task format && task type && task cov"
-
-[dependency-groups]
-dev = [
-    "pre-commit>=4.5.1",
-    "taskipy>=1.14.1",
-]
+docs = "python scripts/generate_docs.py"

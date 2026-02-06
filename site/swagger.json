@@ -1,0 +1,346 @@
+{
+  "components": {
+    "schemas": {
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "properties": {
+              "code": {
+                "description": "Error code.",
+                "example": "INVALID_REQUEST",
+                "type": "string"
+              },
+              "details": {
+                "description": "Additional error details.",
+                "type": "object"
+              },
+              "message": {
+                "description": "Error message.",
+                "example": "Invalid request parameters.",
+                "type": "string"
+              }
+            },
+            "type": "object"
+          }
+        },
+        "type": "object"
+      },
+      "PdfDecodeRequest": {
+        "properties": {
+          "pdf": {
+            "description": "Base64-encoded PDF.",
+            "example": "JVBERi0xLjcK...",
+            "type": "string"
+          }
+        },
+        "required": [
+          "pdf"
+        ],
+        "type": "object"
+      },
+      "RenderRequest": {
+        "properties": {
+          "html": {
+            "description": "Base64-encoded HTML.",
+            "example": "PGh0bWw+PGJvZHk+PGgxPkhlbGxvIFdvcmxkPC9oMT48L2JvZHk+PC9odG1sPg==",
+            "type": "string"
+          }
+        },
+        "required": [
+          "html"
+        ],
+        "type": "object"
+      }
+    }
+  },
+  "definitions": {},
+  "info": {
+    "contact": {
+      "name": "PDF Render Team"
+    },
+    "description": "A microservice that receives base64-encoded HTML and renders it to PDF using WeasyPrint. The HTML is sanitized and validated before rendering. JavaScript is not allowed.",
+    "license": {
+      "name": "MIT"
+    },
+    "title": "PDF Render API",
+    "version": "1.0.0"
+  },
+  "openapi": "3.0.3",
+  "paths": {
+    "/api/v1/decode/pdf": {
+      "post": {
+        "description": "Receives a base64-encoded PDF and returns the decoded PDF file.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PdfDecodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "format": "binary",
+                  "type": "string"
+                }
+              }
+            },
+            "description": "PDF file"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Bad request"
+          }
+        },
+        "summary": "Decode base64 PDF to file.",
+        "tags": [
+          "PDF Rendering"
+        ]
+      }
+    },
+    "/api/v1/render": {
+      "post": {
+        "description": "Receives a base64-encoded HTML string, sanitizes it, validates it (no JavaScript allowed), and renders it to a PDF document.\n\n**Flow:**\n1. Decode the base64 HTML\n2. Check size limits\n3. Detect and reject JavaScript\n4. Sanitize HTML (remove unsafe tags/attributes)\n5. Render to PDF via WeasyPrint\n6. Return base64-encoded PDF",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "examples": {
+                "simple_html": {
+                  "summary": "Simple HTML page",
+                  "value": {
+                    "html": "PGh0bWw+PGJvZHk+PGgxPkhlbGxvIFdvcmxkPC9oMT48L2JvZHk+PC9odG1sPg=="
+                  }
+                },
+                "with_base64_image": {
+                  "summary": "HTML with base64 image",
+                  "value": {
+                    "html": "PGh0bWw+PGJvZHk+PGgxPlRlc3Q8L2gxPjxpbWcgc3JjPSJkYXRhOmltYWdlL3BuZztiYXNlNjQsaVZCT1J3MEtHZ29BQUFBTlNVaEVVZ0FBQURFQUFBQUJDQVlBQUFBZkZjU0pBQUFBQzBsRVFWUUkxMlA0Lzc4REFBQUJCZ0FCRFF5bVF3QUFBQUJKU1VSQlZBaVhnd1kiIGFsdD0idGVzdCIvPjwvYm9keT48L2h0bWw+"
+                  }
+                }
+              },
+              "schema": {
+                "$ref": "#/components/schemas/RenderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "metadata": {
+                      "properties": {
+                        "pages": {
+                          "description": "Pages.",
+                          "example": 1,
+                          "type": "integer"
+                        },
+                        "rendering_time_ms": {
+                          "description": "Time (ms).",
+                          "example": 150.5,
+                          "type": "number"
+                        },
+                        "size_bytes": {
+                          "description": "Size.",
+                          "example": 12345,
+                          "type": "integer"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    "pdf": {
+                      "description": "Base64 PDF.",
+                      "example": "JVBERi0xLjcK...",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "PDF rendered successfully"
+          },
+          "400": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "html_required": {
+                    "summary": "Missing HTML field",
+                    "value": {
+                      "error": {
+                        "code": "HTML_REQUIRED",
+                        "message": "Required."
+                      }
+                    }
+                  },
+                  "invalid_base64": {
+                    "summary": "Invalid base64",
+                    "value": {
+                      "error": {
+                        "code": "INVALID_BASE64",
+                        "message": "Invalid base64."
+                      }
+                    }
+                  },
+                  "javascript_detected": {
+                    "summary": "JavaScript detected",
+                    "value": {
+                      "error": {
+                        "code": "JAVASCRIPT_DETECTED",
+                        "details": {
+                          "detections": [
+                            "Pattern found"
+                          ]
+                        },
+                        "message": "JS not allowed."
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Validation error"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "too_large": {
+                    "summary": "Content too large",
+                    "value": {
+                      "error": {
+                        "code": "HTML_TOO_LARGE",
+                        "details": {
+                          "max_size_mb": 10
+                        },
+                        "message": "Too large."
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "HTML content too large"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "wrong_content_type": {
+                    "summary": "Wrong Content-Type",
+                    "value": {
+                      "error": {
+                        "code": "UNSUPPORTED_MEDIA_TYPE",
+                        "message": "Use JSON."
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Unsupported media type"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "render_failed": {
+                    "summary": "Render failed",
+                    "value": {
+                      "error": {
+                        "code": "RENDER_FAILED",
+                        "details": {
+                          "reason": "Error"
+                        },
+                        "message": "Render failed."
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "Internal server error"
+          }
+        },
+        "summary": "Render base64-encoded HTML to PDF.",
+        "tags": [
+          "PDF Rendering"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Returns the health status of the service.",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "properties": {
+                    "service": {
+                      "example": "pdf-render",
+                      "type": "string"
+                    },
+                    "status": {
+                      "example": "healthy",
+                      "type": "string"
+                    }
+                  },
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Service is healthy"
+          }
+        },
+        "summary": "Health check endpoint.",
+        "tags": [
+          "Health"
+        ]
+      }
+    }
+  },
+  "servers": [
+    {
+      "description": "Local development server",
+      "url": "/"
+    }
+  ],
+  "swagger": null,
+  "tags": [
+    {
+      "description": "Endpoints for HTML to PDF conversion",
+      "name": "PDF Rendering"
+    },
+    {
+      "description": "Health check endpoints",
+      "name": "Health"
+    }
+  ]
+}

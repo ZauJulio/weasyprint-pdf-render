@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/ZauJulio/weasyprint-pdf-render/actions/workflows/ci.yml/badge.svg)](https://github.com/ZauJulio/weasyprint-pdf-render/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/ZauJulio/weasyprint-pdf-render/branch/main/graph/badge.svg)](https://codecov.io/gh/ZauJulio/weasyprint-pdf-render)
-[![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB?logo=python&logoColor=white)](https://python.org)
+[![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.1-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com)
 [![WeasyPrint](https://img.shields.io/badge/WeasyPrint-68-blue)](https://weasyprint.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -38,7 +38,7 @@ Send base64-encoded HTML in, get base64-encoded PDF out. Simple, secure, and fas
 
 ### Prerequisites
 
-- **Python 3.12+** and [uv](https://docs.astral.sh/uv/)
+- **Python 3.14+** and [uv](https://docs.astral.sh/uv/)
 - WeasyPrint system dependencies (Pango, Cairo, GDK-Pixbuf)
 
 ### Local Development
