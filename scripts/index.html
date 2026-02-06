@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>PDF Render - Documentation</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css"
+    />
+    <style>
+      body {
+        margin: 0;
+        background: #fafafa;
+      }
+      .topbar {
+        background-color: #2b2b2b;
+        color: white;
+        padding: 10px 20px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        font-family: sans-serif;
+      }
+      .topbar a {
+        color: white;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .topbar a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="topbar">
+      <span>PDF Render Docs</span>
+      <a href="coverage/index.html">Coverage Report</a>
+    </div>
+    <div id="swagger-ui"></div>
+    <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" crossorigin></script>
+    <script>
+      window.onload = () => {
+        window.ui = SwaggerUIBundle({
+          url: "swagger.json",
+          dom_id: "#swagger-ui",
+          presets: [SwaggerUIBundle.presets.apis, SwaggerUIBundle.SwaggerUIStandalonePreset],
+          layout: "BaseLayout",
+          supportedSubmitMethods: [] // Disable Try It Out
+        });
+      };
+    </script>
+  </body>
+</html>

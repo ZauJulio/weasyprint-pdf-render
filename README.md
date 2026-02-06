@@ -8,7 +8,7 @@
 [![codecov](https://codecov.io/gh/ZauJulio/weasyprint-pdf-render/branch/main/graph/badge.svg)](https://codecov.io/gh/ZauJulio/weasyprint-pdf-render)
 [![Python 3.14+](https://img.shields.io/badge/python-3.14%2B-3776AB?logo=python&logoColor=white)](https://python.org)
 [![Flask](https://img.shields.io/badge/Flask-3.1-000000?logo=flask&logoColor=white)](https://flask.palletsprojects.com)
-[![WeasyPrint](https://img.shields.io/badge/WeasyPrint-68-blue)](https://weasyprint.org)
+[![WeasyPrint](https://img.shields.io/badge/WeasyPrint-68-blue)](https://doc.courtbouillon.org/weasyprint/stable/api_reference.html)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![GHCR](https://img.shields.io/badge/ghcr.io-zaujulio%2Fpdf--render-2496ED?logo=docker&logoColor=white)](https://ghcr.io/zaujulio/pdf-render)
 [![Code style: ruff](https://img.shields.io/badge/code%20style-ruff-261230?logo=ruff&logoColor=white)](https://github.com/astral-sh/ruff)
@@ -173,6 +173,32 @@ All settings are loaded from environment variables (supports `.env` via [python-
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | `http://localhost:4317` | OTLP gRPC endpoint |
 
 > See [.env.example](.env.example) for a ready-to-use template.
+
+## 💡 Best Practices & WeasyPrint Tips
+
+This service renders PDFs using **WeasyPrint**, which behaves differently than a browser like Chrome or a tool like Puppeteer.
+
+### 🎨 CSS & Layout Limitations
+*   **CSS Grid / Flexbox:** Support is limited or experimental. For reliable layouts in PDFs, prefer using **tables** (`<table>`) or legacy block layouts.
+*   **JavaScript:** Scripts are **ignored** (and blocked by our API). All logic and dynamic rendering must be handled *before* sending the HTML.
+*   **Page Breaks:** Use CSS to control where pages split:
+    ```css
+    .keep-together { page-break-inside: avoid; }
+    .new-page { page-break-before: always; }
+    ```
+
+### 🔤 Fonts & Assets
+Since this service runs in an isolated container:
+*   **Custom Fonts:** System fonts aren't available. Use `@font-face` with **Base64** sources in your CSS.
+*   **Images:** Embed small images as Base64 (`data:image/png;base64,...`) to avoid network latency/errors.
+
+### 🧩 HTML Templates (Handlebars)
+We recommend generating the HTML string in your client application using a templating engine before calling this API. **Handlebars** is a great choice for this:
+
+*   **Node.js:** [Handlebars.js](https://handlebarsjs.com/)
+*   **C# / .NET:** [Handlebars.Net](https://github.com/Handlebars-Net/Handlebars.Net)
+*   **Java:** [Handlebars.java](https://github.com/jknack/handlebars.java)
+*   **Python:** [Jinja2](https://jinja.palletsprojects.com/) (Similar syntax)
 
 ## 🏗️ Project Structure
 
