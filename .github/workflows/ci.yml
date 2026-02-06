@@ -98,12 +98,13 @@ jobs:
           uv run task cov
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.14' && github.event_name == 'push'
+        if: matrix.python-version == '3.14'
         uses: codecov/codecov-action@v4
         with:
           file: ./coverage.xml
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+          verbose: true
 
       - name: Generate Documentation Site
         if: matrix.python-version == '3.14' && github.event_name == 'push'

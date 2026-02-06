@@ -65,13 +65,13 @@ The server starts at `http://localhost:5000` — Swagger UI at `http://localhost
 Pull the public image directly from **GitHub Container Registry**:
 
 ```bash
-docker pull ghcr.io/zaujulio/pdf-render:latest
+docker pull ghcr.io/zaujulio/weasyprint-pdf-render:latest
 ```
 
 Run it:
 
 ```bash
-docker run -d -p 5000:5000 ghcr.io/zaujulio/pdf-render:latest
+docker run -d -p 5000:5000 ghcr.io/zaujulio/weasyprint-pdf-render:latest
 ```
 
 Or use `docker compose`:
@@ -155,7 +155,7 @@ uv run pytest tests/test_sanitizer.py -v
 | `test_routes.py` | API endpoints, validation, Swagger | 15 |
 | `test_sanitizer.py` | Base64 decode, JS detection, HTML sanitization | 30 |
 
-Coverage is automatically measured on every push via [GitHub Actions](.github/workflows/ci.yml) and reported to [Codecov](https://codecov.io/gh/ZauJulio/pdf-render).
+Coverage is automatically measured on every push via [GitHub Actions](.github/workflows/ci.yml) and reported to [Codecov](https://codecov.io/gh/ZauJulio/weasyprint-pdf-render).
 
 ## ⚙️ Configuration
 
@@ -179,26 +179,30 @@ All settings are loaded from environment variables (supports `.env` via [python-
 This service renders PDFs using **WeasyPrint**, which behaves differently than a browser like Chrome or a tool like Puppeteer.
 
 ### 🎨 CSS & Layout Limitations
-*   **CSS Grid / Flexbox:** Support is limited or experimental. For reliable layouts in PDFs, prefer using **tables** (`<table>`) or legacy block layouts.
-*   **JavaScript:** Scripts are **ignored** (and blocked by our API). All logic and dynamic rendering must be handled *before* sending the HTML.
-*   **Page Breaks:** Use CSS to control where pages split:
+
+* **CSS Grid / Flexbox:** Support is limited or experimental. For reliable layouts in PDFs, prefer using **tables** (`<table>`) or legacy block layouts.
+- **JavaScript:** Scripts are **ignored** (and blocked by our API). All logic and dynamic rendering must be handled *before* sending the HTML.
+- **Page Breaks:** Use CSS to control where pages split:
+
     ```css
     .keep-together { page-break-inside: avoid; }
     .new-page { page-break-before: always; }
     ```
 
 ### 🔤 Fonts & Assets
+
 Since this service runs in an isolated container:
-*   **Custom Fonts:** System fonts aren't available. Use `@font-face` with **Base64** sources in your CSS.
-*   **Images:** Embed small images as Base64 (`data:image/png;base64,...`) to avoid network latency/errors.
+- **Custom Fonts:** System fonts aren't available. Use `@font-face` with **Base64** sources in your CSS.
+- **Images:** Embed small images as Base64 (`data:image/png;base64,...`) to avoid network latency/errors.
 
 ### 🧩 HTML Templates (Handlebars)
+
 We recommend generating the HTML string in your client application using a templating engine before calling this API. **Handlebars** is a great choice for this:
 
-*   **Node.js:** [Handlebars.js](https://handlebarsjs.com/)
-*   **C# / .NET:** [Handlebars.Net](https://github.com/Handlebars-Net/Handlebars.Net)
-*   **Java:** [Handlebars.java](https://github.com/jknack/handlebars.java)
-*   **Python:** [Jinja2](https://jinja.palletsprojects.com/) (Similar syntax)
+- **Node.js:** [Handlebars.js](https://handlebarsjs.com/)
+- **C# / .NET:** [Handlebars.Net](https://github.com/Handlebars-Net/Handlebars.Net)
+- **Java:** [Handlebars.java](https://github.com/jknack/handlebars.java)
+- **Python:** [Jinja2](https://jinja.palletsprojects.com/) (Similar syntax)
 
 ## 🏗️ Project Structure
 
