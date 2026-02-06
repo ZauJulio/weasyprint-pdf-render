@@ -1,0 +1,59 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Flask: Dev Server",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "app",
+            "env": {
+                "FLASK_ENV": "development",
+                "LOG_LEVEL": "DEBUG",
+                "OTEL_ENABLED": "false"
+            },
+            "jinja": true,
+            "justMyCode": false
+        },
+        {
+            "name": "Flask: Gunicorn",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "gunicorn",
+            "args": [
+                "--bind", "0.0.0.0:5000",
+                "--workers", "1",
+                "--timeout", "120",
+                "app.__main__:app"
+            ],
+            "env": {
+                "FLASK_ENV": "development",
+                "LOG_LEVEL": "DEBUG"
+            },
+            "jinja": true,
+            "justMyCode": false
+        },
+        {
+            "name": "Pytest: All Tests",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "-v",
+                "--tb=short"
+            ],
+            "justMyCode": false
+        },
+        {
+            "name": "Pytest: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "${file}",
+                "-v",
+                "--tb=short"
+            ],
+            "justMyCode": false
+        }
+    ]
+}

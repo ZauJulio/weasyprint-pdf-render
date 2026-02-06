@@ -1,0 +1,14 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.analysis.extraPaths": ["${workspaceFolder}"],
+  "python.analysis.typeCheckingMode": "basic",
+  "workbench.colorCustomizations": {
+    "commandCenter.border": "#15202b99",
+    "tab.activeBorder": "#c18fe2",
+    "titleBar.activeBackground": "#aa66d8",
+    "titleBar.activeForeground": "#15202b",
+    "titleBar.inactiveBackground": "#aa66d899",
+    "titleBar.inactiveForeground": "#15202b99"
+  },
+  "peacock.color": "#aa66d8"
+}

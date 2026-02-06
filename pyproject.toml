@@ -1,0 +1,85 @@
+[project]
+name = "pdf-render"
+version = "1.0.0"
+authors = [
+    { name = "zaujulio", email = "zaujulio.dev@gmail.com" }
+]
+description = "A Flask-based PDF rendering service using WeasyPrint"
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "MIT" }
+
+dependencies = [
+    "flask>=3.1.0",
+    "flasgger>=0.9.7",
+    "weasyprint>=63.0",
+    "bleach>=6.2.0",
+    "opentelemetry-api>=1.29.0",
+    "opentelemetry-sdk>=1.29.0",
+    "opentelemetry-instrumentation-flask>=0.50b0",
+    "opentelemetry-exporter-otlp>=1.29.0",
+    "python-json-logger>=3.2.1",
+    "gunicorn>=23.0.0",
+    "python-dotenv>=1.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-cov>=6.0.0",
+    "ruff>=0.9.0",
+    "ty>=0.0.1a0",
+]
+
+[tool.ruff]
+target-version = "py314"
+line-length = 100
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "W",    # pycodestyle warnings
+    "F",    # pyflakes
+    "I",    # isort
+    "N",    # pep8-naming
+    "UP",   # pyupgrade
+    "B",    # flake8-bugbear
+    "S",    # flake8-bandit
+    "A",    # flake8-builtins
+    "C4",   # flake8-comprehensions
+    "LOG",  # flake8-logging
+    "T20",  # flake8-print
+    "RET",  # flake8-return
+    "SIM",  # flake8-simplify
+    "TCH",  # flake8-type-checking
+    "PTH",  # flake8-use-pathlib
+]
+ignore = ["S603", "S101"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["app"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-v --tb=short --strict-markers"
+
+[tool.ty.environment]
+python-version = "3.12"
+
+[tool.taskipy.tasks]
+dev = "python -m app"
+lint = "ruff check ."
+lint_fix = "ruff check --fix ."
+format = "ruff format ."
+format_check = "ruff format --check ."
+type = "ty check"
+test = "pytest"
+cov = "pytest --cov=app --cov-report=html --cov-report=term-missing --cov-report=xml"
+check = "task lint_fix && task format && task type && task cov"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.1",
+    "taskipy>=1.14.1",
+]
