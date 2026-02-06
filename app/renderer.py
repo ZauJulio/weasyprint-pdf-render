@@ -54,18 +54,18 @@ def render_html_to_pdf(html: str) -> RenderResult:
         raise RenderError(details={"reason": str(exc)}) from exc
 
     elapsed_ms = (time.perf_counter() - start_time) * 1000
-    pdf_base64 = base64.b64encode(pdf_bytes).decode("ascii")
+    pdf_base64 = base64.b64encode(pdf_bytes).decode("ascii")  # type: ignore
 
     logger.info(
         "PDF rendered successfully: %d pages, %d bytes, %.2fms",
         pages,
-        len(pdf_bytes),
+        len(pdf_bytes),  # type: ignore
         elapsed_ms,
     )
 
     return RenderResult(
         pdf_base64=pdf_base64,
         pages=pages,
-        size_bytes=len(pdf_bytes),
+        size_bytes=len(pdf_bytes),  # type: ignore
         rendering_time_ms=round(elapsed_ms, 2),
     )
