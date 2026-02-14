@@ -19,6 +19,9 @@ def test_config() -> Config:
         LOG_LEVEL="DEBUG",
         MAX_HTML_SIZE_MB=1,
         OTEL_ENABLED=False,
+        RATE_LIMIT_ENABLED=False,
+        FORCE_HTTPS=False,
+        CORS_ORIGINS=["*"],
     )
 
 

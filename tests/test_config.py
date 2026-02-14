@@ -32,3 +32,32 @@ class TestConfig:
     def test_get_config_returns_config(self) -> None:
         config = get_config()
         assert isinstance(config, Config)
+
+    def test_cors_defaults(self) -> None:
+        config = Config()
+        assert isinstance(config.CORS_ORIGINS, list)
+        assert config.CORS_MAX_AGE == 600
+
+    def test_rate_limit_defaults(self) -> None:
+        config = Config()
+        assert config.RATE_LIMIT_ENABLED is True
+        assert config.RATE_LIMIT_DEFAULT == "60/minute"
+        assert config.RATE_LIMIT_RENDER == "20/minute"
+
+    def test_security_defaults(self) -> None:
+        config = Config()
+        assert config.FORCE_HTTPS is False
+
+    def test_custom_cors_origins(self) -> None:
+        config = Config(CORS_ORIGINS=["https://example.com", "https://other.com"])
+        assert len(config.CORS_ORIGINS) == 2
+
+    def test_custom_rate_limits(self) -> None:
+        config = Config(
+            RATE_LIMIT_ENABLED=False,
+            RATE_LIMIT_DEFAULT="100/minute",
+            RATE_LIMIT_RENDER="50/minute",
+        )
+        assert config.RATE_LIMIT_ENABLED is False
+        assert config.RATE_LIMIT_DEFAULT == "100/minute"
+        assert config.RATE_LIMIT_RENDER == "50/minute"

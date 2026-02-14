@@ -3,8 +3,12 @@
 from __future__ import annotations
 
 import base64
+from unittest.mock import patch
 
-from app.renderer import RenderResult, render_html_to_pdf
+import pytest
+
+from app.errors import RenderError
+from app.features.render.service import RenderResult, render_html_to_pdf
 
 
 class TestRenderHtmlToPdf:
@@ -62,3 +66,12 @@ class TestRenderHtmlToPdf:
         assert isinstance(result.pages, int)
         assert isinstance(result.size_bytes, int)
         assert isinstance(result.rendering_time_ms, float)
+
+    def test_render_error_on_failure(self) -> None:
+        """Should raise RenderError when WeasyPrint fails."""
+        with patch("app.features.render.service.HTML") as mock_html:
+            mock_html.side_effect = RuntimeError("WeasyPrint crash")
+            with pytest.raises(RenderError) as exc_info:
+                render_html_to_pdf("<html><body>test</body></html>")
+            assert exc_info.value.details is not None
+            assert "WeasyPrint crash" in exc_info.value.details["reason"]
