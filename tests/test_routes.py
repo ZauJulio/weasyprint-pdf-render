@@ -55,24 +55,26 @@ class TestRenderEndpoint:
         assert response.status_code == 200
 
     def test_missing_html_field(self, client) -> None:
+        """Missing html field should return 422 (Pydantic validation)."""
         response = client.post(
             "/api/v1/render",
             json={"not_html": "something"},
             content_type="application/json",
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
         data = response.get_json()
-        assert data["error"]["code"] == "HTML_REQUIRED"
+        assert data["error"]["code"] == "VALIDATION_ERROR"
 
     def test_empty_html_field(self, client) -> None:
+        """Empty html string should return 422 (Pydantic min_length=1)."""
         response = client.post(
             "/api/v1/render",
             json={"html": ""},
             content_type="application/json",
         )
-        assert response.status_code == 400
+        assert response.status_code == 422
         data = response.get_json()
-        assert data["error"]["code"] == "HTML_REQUIRED"
+        assert data["error"]["code"] == "VALIDATION_ERROR"
 
     def test_invalid_base64(self, client) -> None:
         response = client.post(
@@ -138,6 +140,29 @@ class TestRenderEndpoint:
     def test_not_found(self, client) -> None:
         response = client.get("/api/v1/nonexistent")
         assert response.status_code == 404
+
+    def test_html_non_string_returns_422(self, client) -> None:
+        """Non-string html field should return 422 from Pydantic."""
+        response = client.post(
+            "/api/v1/render",
+            json={"html": 12345},
+            content_type="application/json",
+        )
+        assert response.status_code == 422
+        data = response.get_json()
+        assert data["error"]["code"] == "VALIDATION_ERROR"
+
+    def test_validation_error_has_details(self, client) -> None:
+        """422 response should include error details from Pydantic."""
+        response = client.post(
+            "/api/v1/render",
+            json={},
+            content_type="application/json",
+        )
+        assert response.status_code == 422
+        data = response.get_json()
+        assert data["error"]["details"] is not None
+        assert "errors" in data["error"]["details"]
 
 
 class TestSwaggerEndpoint:

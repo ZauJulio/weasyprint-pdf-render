@@ -10,8 +10,9 @@ from app.errors import (
     HtmlTooLargeError,
     InvalidBase64Error,
     JavaScriptDetectedError,
+    SanitizationError,
 )
-from app.sanitizer import (
+from app.features.render.sanitizer import (
     check_html_size,
     check_no_javascript,
     decode_base64_html,
@@ -195,3 +196,19 @@ class TestValidateAndSanitize:
         encoded = base64.b64encode(html.encode()).decode()
         with pytest.raises(JavaScriptDetectedError):
             validate_and_sanitize(encoded, max_size_bytes=1024 * 1024, max_size_mb=1)
+
+
+class TestSanitizeHtmlErrorPath:
+    """Tests for sanitize_html error handling."""
+
+    def test_sanitization_error_on_bleach_failure(self) -> None:
+        """Should raise SanitizationError when bleach.clean fails."""
+        from unittest.mock import patch
+
+        with patch(
+            "app.features.render.sanitizer.bleach.clean", side_effect=RuntimeError("Bleach crash")
+        ):
+            with pytest.raises(SanitizationError) as exc_info:
+                sanitize_html("<p>test</p>")
+            assert exc_info.value.details is not None
+            assert "Bleach crash" in exc_info.value.details["reason"]

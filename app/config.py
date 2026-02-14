@@ -30,6 +30,32 @@ class Config:
         default_factory=lambda: os.getenv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://localhost:4317")
     )
 
+    # CORS
+    CORS_ORIGINS: list[str] = field(
+        default_factory=lambda: os.getenv("CORS_ORIGINS", "*").split(",")
+    )
+    CORS_MAX_AGE: int = field(default_factory=lambda: int(os.getenv("CORS_MAX_AGE", "600")))
+
+    # Rate Limiting
+    RATE_LIMIT_ENABLED: bool = field(
+        default_factory=lambda: os.getenv("RATE_LIMIT_ENABLED", "true").lower() == "true"
+    )
+    RATE_LIMIT_DEFAULT: str = field(
+        default_factory=lambda: os.getenv("RATE_LIMIT_DEFAULT", "60/minute")
+    )
+    RATE_LIMIT_RENDER: str = field(
+        default_factory=lambda: os.getenv("RATE_LIMIT_RENDER", "20/minute")
+    )
+
+    # Security
+    FORCE_HTTPS: bool = field(
+        default_factory=lambda: os.getenv("FORCE_HTTPS", "false").lower() == "true"
+    )
+
+    # API Key authentication (opt-in: empty string = disabled)
+    API_KEY: str = field(default_factory=lambda: os.getenv("API_KEY", ""))
+    API_KEY_HEADER: str = field(default_factory=lambda: os.getenv("API_KEY_HEADER", "X-API-Key"))
+
     @property
     def max_html_size_bytes(self) -> int:
         return self.MAX_HTML_SIZE_MB * 1024 * 1024
