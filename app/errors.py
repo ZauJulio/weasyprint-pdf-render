@@ -1,4 +1,4 @@
-"""Custom exception classes and error handlers."""
+"""Custom exception classes, error handlers, and error response models."""
 
 from __future__ import annotations
 
@@ -8,14 +8,21 @@ from enum import StrEnum
 from typing import Any
 
 from flask import Flask, jsonify
+from pydantic import BaseModel, Field
 
 logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Error codes & messages
+# ---------------------------------------------------------------------------
 
 
 class ErrorCode(StrEnum):
     """Application error codes."""
 
     INVALID_REQUEST = "INVALID_REQUEST"
+    VALIDATION_ERROR = "VALIDATION_ERROR"
     HTML_REQUIRED = "HTML_REQUIRED"
     INVALID_BASE64 = "INVALID_BASE64"
     HTML_TOO_LARGE = "HTML_TOO_LARGE"
@@ -24,10 +31,13 @@ class ErrorCode(StrEnum):
     RENDER_FAILED = "RENDER_FAILED"
     INTERNAL_ERROR = "INTERNAL_ERROR"
     UNSUPPORTED_MEDIA_TYPE = "UNSUPPORTED_MEDIA_TYPE"
+    RATE_LIMIT_EXCEEDED = "RATE_LIMIT_EXCEEDED"
+    UNAUTHORIZED = "UNAUTHORIZED"
 
 
 ERROR_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.INVALID_REQUEST: "The request body is invalid or malformed.",
+    ErrorCode.VALIDATION_ERROR: "Request validation failed.",
     ErrorCode.HTML_REQUIRED: "The 'html' field is required in the request body.",
     ErrorCode.INVALID_BASE64: "The 'html' field must be a valid base64-encoded string.",
     ErrorCode.HTML_TOO_LARGE: "The HTML content exceeds the maximum allowed size.",
@@ -38,7 +48,14 @@ ERROR_MESSAGES: dict[ErrorCode, str] = {
     ErrorCode.RENDER_FAILED: "Failed to render the HTML to PDF.",
     ErrorCode.INTERNAL_ERROR: "An unexpected internal error occurred.",
     ErrorCode.UNSUPPORTED_MEDIA_TYPE: "Content-Type must be application/json.",
+    ErrorCode.RATE_LIMIT_EXCEEDED: "Too many requests. Please try again later.",
+    ErrorCode.UNAUTHORIZED: "Invalid or missing API key.",
 }
+
+
+# ---------------------------------------------------------------------------
+# Base exception & concrete subclasses
+# ---------------------------------------------------------------------------
 
 
 @dataclass
@@ -75,6 +92,17 @@ class InvalidRequestError(AppError):
             code=ErrorCode.INVALID_REQUEST,
             message=message,
             status_code=400,
+            details=details,
+        )
+
+
+class ValidationError(AppError):
+    """Pydantic validation failed."""
+
+    def __init__(self, details: dict[str, Any] | None = None) -> None:
+        super().__init__(
+            code=ErrorCode.VALIDATION_ERROR,
+            status_code=422,
             details=details,
         )
 
@@ -132,6 +160,44 @@ class UnsupportedMediaTypeError(AppError):
         super().__init__(code=ErrorCode.UNSUPPORTED_MEDIA_TYPE, status_code=415)
 
 
+class RateLimitExceededError(AppError):
+    """Rate limit exceeded."""
+
+    def __init__(self) -> None:
+        super().__init__(code=ErrorCode.RATE_LIMIT_EXCEEDED, status_code=429)
+
+
+class UnauthorizedError(AppError):
+    """Invalid or missing API key."""
+
+    def __init__(self, message: str | None = None) -> None:
+        super().__init__(code=ErrorCode.UNAUTHORIZED, message=message, status_code=401)
+
+
+# ---------------------------------------------------------------------------
+# Pydantic models for error responses (used in Swagger / serialization)
+# ---------------------------------------------------------------------------
+
+
+class ErrorDetail(BaseModel):
+    """Error detail in API error responses."""
+
+    code: str = Field(..., description="Machine-readable error code.")
+    message: str = Field(..., description="Human-readable error message.")
+    details: dict[str, object] | None = Field(default=None, description="Additional error details.")
+
+
+class ErrorResponse(BaseModel):
+    """Standard API error response."""
+
+    error: ErrorDetail
+
+
+# ---------------------------------------------------------------------------
+# Flask error handlers
+# ---------------------------------------------------------------------------
+
+
 def register_error_handlers(app: Flask) -> None:
     """Register error handlers on the Flask app."""
 
@@ -180,6 +246,18 @@ def register_error_handlers(app: Flask) -> None:
                 }
             }
         ), 413
+
+    @app.errorhandler(429)
+    def handle_rate_limit_exceeded(error):  # noqa: ANN001, ANN202
+        logger.warning("Rate limit exceeded: %s", str(error))
+        return jsonify(
+            {
+                "error": {
+                    "code": ErrorCode.RATE_LIMIT_EXCEEDED.value,
+                    "message": ERROR_MESSAGES[ErrorCode.RATE_LIMIT_EXCEEDED],
+                }
+            }
+        ), 429
 
     @app.errorhandler(500)
     def handle_internal_error(error):  # noqa: ANN001, ANN202
