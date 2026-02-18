@@ -1,0 +1,317 @@
+{
+  "basePath": "/",
+  "consumes": [
+    "application/json"
+  ],
+  "definitions": {
+    "ErrorResponse": {
+      "properties": {
+        "error": {
+          "properties": {
+            "code": {
+              "description": "Machine-readable error code.",
+              "example": "INVALID_REQUEST",
+              "type": "string"
+            },
+            "details": {
+              "description": "Additional error details.",
+              "type": "object"
+            },
+            "message": {
+              "description": "Human-readable error message.",
+              "example": "Invalid request parameters.",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        }
+      },
+      "type": "object"
+    },
+    "PdfDecodeRequest": {
+      "properties": {
+        "pdf": {
+          "description": "Base64-encoded PDF string.",
+          "example": "JVBERi0xLjcK...",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "pdf"
+      ],
+      "type": "object"
+    },
+    "RenderRequest": {
+      "properties": {
+        "html": {
+          "description": "Base64-encoded HTML string.",
+          "example": "PGh0bWw+PGJvZHk+PGgxPkhlbGxvIFdvcmxkPC9oMT48L2JvZHk+PC9odG1sPg==",
+          "minLength": 1,
+          "type": "string"
+        }
+      },
+      "required": [
+        "html"
+      ],
+      "type": "object"
+    },
+    "RenderResponse": {
+      "properties": {
+        "metadata": {
+          "properties": {
+            "pages": {
+              "description": "Number of pages.",
+              "example": 1,
+              "type": "integer"
+            },
+            "rendering_time_ms": {
+              "description": "Rendering time in milliseconds.",
+              "example": 150.5,
+              "type": "number"
+            },
+            "size_bytes": {
+              "description": "PDF size in bytes.",
+              "example": 12345,
+              "type": "integer"
+            }
+          },
+          "type": "object"
+        },
+        "pdf": {
+          "description": "Base64-encoded PDF.",
+          "example": "JVBERi0xLjcK...",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "info": {
+    "contact": {
+      "name": "PDF Render Team"
+    },
+    "description": "A microservice that receives base64-encoded HTML and renders it to PDF using WeasyPrint. The HTML is sanitized and validated before rendering. JavaScript is not allowed.\n\n**Security features:**\n- API key authentication (opt-in via ``API_KEY`` env var)\n- Pydantic request validation\n- Rate limiting (per IP)\n- CORS protection\n- Security headers (CSP, HSTS, X-Frame-Options, etc.)\n- Request ID tracking",
+    "license": {
+      "name": "MIT"
+    },
+    "title": "PDF Render API",
+    "version": "1.1.0"
+  },
+  "paths": {
+    "/api/v1/decode/pdf": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Receives a base64-encoded PDF and returns the decoded PDF file.",
+        "parameters": [
+          {
+            "description": "Base64-encoded PDF to decode.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/PdfDecodeRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/pdf"
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF file",
+            "schema": {
+              "type": "file"
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized \u2014 invalid or missing API key",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error (Pydantic)",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "summary": "Decode base64 PDF to file.",
+        "tags": [
+          "PDF Rendering"
+        ]
+      }
+    },
+    "/api/v1/render": {
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "description": "Receives a base64-encoded HTML string, sanitizes it, validates it (no JavaScript allowed), and renders it to a PDF document.\n\n**Flow:**\n1. Validate request body via Pydantic model\n2. Decode the base64 HTML\n3. Check size limits\n4. Detect and reject JavaScript\n5. Sanitize HTML (remove unsafe tags/attributes)\n6. Render to PDF via WeasyPrint\n7. Return base64-encoded PDF",
+        "parameters": [
+          {
+            "description": "HTML content to render as PDF.",
+            "in": "body",
+            "name": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/RenderRequest"
+            }
+          }
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF rendered successfully",
+            "examples": {
+              "application/json": {
+                "metadata": {
+                  "pages": 1,
+                  "rendering_time_ms": 150.5,
+                  "size_bytes": 12345
+                },
+                "pdf": "JVBERi0xLjcK..."
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/RenderResponse"
+            }
+          },
+          "400": {
+            "description": "Validation error",
+            "examples": {
+              "application/json": {
+                "error": {
+                  "code": "INVALID_BASE64",
+                  "message": "Invalid base64."
+                }
+              }
+            },
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "401": {
+            "description": "Unauthorized \u2014 invalid or missing API key",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "413": {
+            "description": "HTML content too large",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "415": {
+            "description": "Unsupported media type",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "422": {
+            "description": "Validation error (Pydantic)",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "429": {
+            "description": "Rate limit exceeded",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "schema": {
+              "$ref": "#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "summary": "Render base64-encoded HTML to PDF.",
+        "tags": [
+          "PDF Rendering"
+        ]
+      }
+    },
+    "/health": {
+      "get": {
+        "description": "Returns the health status of the service.",
+        "produces": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "Service is healthy",
+            "schema": {
+              "properties": {
+                "service": {
+                  "example": "pdf-render",
+                  "type": "string"
+                },
+                "status": {
+                  "example": "healthy",
+                  "type": "string"
+                }
+              },
+              "type": "object"
+            }
+          }
+        },
+        "security": [],
+        "summary": "Health check endpoint.",
+        "tags": [
+          "Health"
+        ]
+      }
+    }
+  },
+  "produces": [
+    "application/json"
+  ],
+  "schemes": [
+    "http",
+    "https"
+  ],
+  "security": [
+    {
+      "ApiKeyAuth": []
+    }
+  ],
+  "securityDefinitions": {
+    "ApiKeyAuth": {
+      "description": "API key authentication (opt-in). Set the API_KEY environment variable to enable. Health and Swagger endpoints are always public.",
+      "in": "header",
+      "name": "X-API-Key",
+      "type": "apiKey"
+    }
+  },
+  "swagger": "2.0",
+  "tags": [
+    {
+      "description": "Endpoints for HTML to PDF conversion",
+      "name": "PDF Rendering"
+    },
+    {
+      "description": "Health check endpoints",
+      "name": "Health"
+    }
+  ]
+}
